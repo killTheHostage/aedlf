@@ -15,3 +15,8 @@
 * 增加CUDA加速相关功能
 * 支持计算图剪枝优化等操作
 * 支持模型并行、数据并行
+### 本项目参考资料（及鸣谢）
+* [Caffe](https://github.com/BVLC/caffe)
+* [Pytorch DOC](https://pytorch.org/docs/stable/index.html)
+* [ai-edu(Microsoft)](https://microsoft.github.io/ai-edu/)
+* [cppreference.com](https://en.cppreference.com/w/)
