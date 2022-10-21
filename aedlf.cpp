@@ -1,4 +1,4 @@
-#include "thrid-part/npy.hpp"
+#include "third-part/npy.hpp"
 #include "include/math/matrix.hpp"
 #include "include/math/tools.hpp"
 #include "include/graph/components/data.hpp"
