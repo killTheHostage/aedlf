@@ -47,6 +47,7 @@ int main() {
         input_data.clear_jacobi();
         fc_layer.clear_jacobi();
         loss_layer.clear_jacobi();
+        sigmoid_layer.clear_jacobi();
         std::cout << "index: " << i << " loss: ";
         Matrix<double> loss_value {loss->at(0)->get_data()};
         utils::print_matrix<double>(loss_value);
