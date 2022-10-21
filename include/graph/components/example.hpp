@@ -5,7 +5,7 @@
 namespace aedlf {
     namespace components {
         template <typename MType>
-        class Example : BaseComponent<MType> {
+        class Example : public BaseComponent<MType> {
             
         };
     }

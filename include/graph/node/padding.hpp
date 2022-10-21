@@ -7,10 +7,10 @@ namespace aedlf {
         template <typename MType>
         class PaddingNode : public BaseNode<MType> {
             public:
-                using ul_pos = const std::pair<int, int>;
+                using ul_pos = const std::pair<unsigned long, unsigned long>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
-                using kernel_shape = std::vector<unsigned>;
-                using matrix_dim = std::vector<int>;
+                using kernel_shape = std::vector<unsigned long>;
+                using matrix_dim = std::vector<unsigned long>;
                 using matrix_data_p = std::shared_ptr<std::vector<MType>>;
                 using graph_nodes = std::shared_ptr<std::vector<std::shared_ptr<BaseNode<MType>>>>;
                 PaddingNode(std::string node_name, matrix_dim m_dim, kernel_shape padding, MType padding_init) : BaseNode<MType> {node_name, m_dim}, padding_size_(padding), padding_init_(padding_init) {};

@@ -7,7 +7,7 @@ namespace aedlf {
         template <typename MType>
         class MulNode : public BaseNode<MType> {
             public:
-                using ul_pos = const std::pair<int, int>;
+                using ul_pos = const std::pair<unsigned long, unsigned long>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
                 using BaseNode<MType>::BaseNode;
                 void compute_forward() override;
@@ -18,7 +18,7 @@ namespace aedlf {
         void MulNode<MType>::compute_forward() {
             size_t parents_len {BaseNode<MType>::get_parents_len()};
             assert(parents_len >= 2);
-            BaseNode<MType>::data.copy_from(static_cast<const Matrix<MType>>(BaseNode<MType>::get_parent(0)->get_data()));
+            BaseNode<MType>::data.copy_from(BaseNode<MType>::get_parent(0)->get_data());
             for(size_t i {1}; i < parents_len; ++i) {
                 BaseNode<MType>::data *= BaseNode<MType>::get_parent(i)->get_data();
             }
@@ -33,13 +33,14 @@ namespace aedlf {
             // jacobi_dim is transpose dim
             typename BaseNode<MType>::matrix_dim jacobi_dim {BaseNode<MType>::data.get_dim()};
             if(parent_node == BaseNode<MType>::parents->at(0)) {
-                typename BaseNode<MType>::matrix_dim parent1_dim {BaseNode<MType>::parents->at(0)->get_data().get_dim()};
-                typename BaseNode<MType>::matrix_dim parent2_dim {BaseNode<MType>::parents->at(1)->get_data().get_dim()};
-                jacobi_dim[3] = parent1_dim[2] * parent2_dim[3];
-                jacobi_dim[2] = parent1_dim[2] * parent1_dim[3];
+                typename BaseNode<MType>::matrix_dim parent0_dim {BaseNode<MType>::parents->at(0)->get_data().get_dim()};
+                typename BaseNode<MType>::matrix_dim parent1_dim {BaseNode<MType>::parents->at(1)->get_data().get_dim()};
+                jacobi_dim[2] = parent0_dim[2] * parent1_dim[3];
+                jacobi_dim[3] = parent0_dim[2] * parent0_dim[3];
                 mm.modify_dim(jacobi_dim);
                 Matrix<MType> fw_m {BaseNode<MType>::parents->at(1)->get_data()};
-                mm.diagonal(m, fw_m.T());
+                fw_m.T();
+                mm.diagonal(m, fw_m);
             }
             else {
                 typename BaseNode<MType>::matrix_dim parent2_dim {BaseNode<MType>::parents->at(1)->get_data().get_dim()};

@@ -8,23 +8,23 @@ namespace aedlf {
         template <typename MType>
         class ConcatNode : public BaseNode<MType> {
             public:
-                using ul_pos = const std::pair<int, int>;
+                using ul_pos = const std::pair<unsigned long, unsigned long>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
-                using kernel_shape = std::vector<unsigned>;
-                using matrix_dim = std::vector<int>;
+                using kernel_shape = std::vector<unsigned long>;
+                using matrix_dim = std::vector<unsigned long>;
                 using matrix_data_p = std::shared_ptr<std::vector<MType>>;
                 using graph_nodes = std::shared_ptr<std::vector<std::shared_ptr<BaseNode<MType>>>>;
-                ConcatNode(std::string node_name, matrix_dim m_dim, int concat_dim) : BaseNode<MType> {node_name, m_dim}, concat_dim_(concat_dim) {};
-                ConcatNode(std::string node_name, const Matrix<MType>& m, int concat_dim) : BaseNode<MType> {node_name, m}, concat_dim_(concat_dim) {};
-                ConcatNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, int concat_dim) : BaseNode<MType> {node_name, data, m_dim}, concat_dim_(concat_dim) {};
-                ConcatNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, node_ptr parent, int concat_dim) : BaseNode<MType> {node_name, data, m_dim, parent}, concat_dim_(concat_dim) {};
-                ConcatNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, graph_nodes parents, int concat_dim) : BaseNode<MType> {node_name, data, m_dim, parents}, concat_dim_(concat_dim) {};
+                ConcatNode(std::string node_name, matrix_dim m_dim, unsigned long concat_dim) : BaseNode<MType> {node_name, m_dim}, concat_dim_(concat_dim) {};
+                ConcatNode(std::string node_name, const Matrix<MType>& m, unsigned long concat_dim) : BaseNode<MType> {node_name, m}, concat_dim_(concat_dim) {};
+                ConcatNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, unsigned long concat_dim) : BaseNode<MType> {node_name, data, m_dim}, concat_dim_(concat_dim) {};
+                ConcatNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, node_ptr parent, unsigned long concat_dim) : BaseNode<MType> {node_name, data, m_dim, parent}, concat_dim_(concat_dim) {};
+                ConcatNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, graph_nodes parents, unsigned long concat_dim) : BaseNode<MType> {node_name, data, m_dim, parents}, concat_dim_(concat_dim) {};
                 void compute_forward() override;
                 void compute_jacobi(Matrix<MType>& m, node_ptr parent_node) override;
                 void backward(node_ptr output_node) override;
             protected:
                 matrix_tools::MakeMatrix<MType> mm;
-                int concat_dim_;
+                unsigned long concat_dim_;
         };
 
         template <typename MType>

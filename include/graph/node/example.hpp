@@ -5,7 +5,7 @@
 namespace aedlf {
     namespace graph {
         template <typename MType>
-        class ExampleNode : BaseNode<MType> {
+        class ExampleNode : public BaseNode<MType> {
 
         };
     }

@@ -11,13 +11,13 @@ namespace aedlf {
                 using graph_nodes = std::shared_ptr<std::vector<std::shared_ptr<BaseNode<MType>>>>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
                 using matrix_data_p = std::shared_ptr<std::vector<MType>>;
-                using matrix_dim = std::vector<int>;
+                using matrix_dim = std::vector<unsigned long>;
                 using BaseNode<MType>::BaseNode;
                 graph_nodes get_childrens() override;
-                node_ptr get_children(int children_id) override;
+                node_ptr get_children(size_t children_id) override;
                 size_t get_childrens_len() override;
                 void add_children(node_ptr children) override;
-                void compute_jacobi(Matrix<MType>& m) override;
+                void backward(node_ptr output_node) override = 0;
         };
 
         template <typename MType>
@@ -26,7 +26,7 @@ namespace aedlf {
         }
 
         template <typename MType>
-        typename LossNode<MType>::node_ptr LossNode<MType>::get_children(int children_id) {
+        typename LossNode<MType>::node_ptr LossNode<MType>::get_children(size_t children_id) {
             throw std::runtime_error("`LossNode` is not allowed to get `childrens` by `children_id`");
         }
 

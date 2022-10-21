@@ -11,7 +11,7 @@ namespace aedlf {
                 using graph_nodes = std::shared_ptr<std::vector<std::shared_ptr<BaseNode<MType>>>>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
                 using matrix_data_p = std::shared_ptr<std::vector<MType>>;
-                using matrix_dim = std::vector<int>;
+                using matrix_dim = std::vector<unsigned long>;
                 DataNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, node_ptr parent);
                 DataNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, graph_nodes parents);
                 graph_nodes get_parents() override;

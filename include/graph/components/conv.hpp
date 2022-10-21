@@ -19,21 +19,22 @@
 namespace aedlf {
     namespace components {
         template <typename MType>
-        class Conv2d : BaseComponent<MType> {
+        class Conv2d : public BaseComponent<MType> {
             public:
                 using node_ptr = std::shared_ptr<graph::BaseNode<MType>>;
-                using node_ptr_c = std::vector<node_ptr>;
-                using matrix_dim = std::vector<int>;
-                using kernel_shape = std::vector<unsigned>;
+                using node_ptr_c = std::shared_ptr<std::vector<node_ptr>>;
+                using matrix_dim = std::vector<unsigned long>;
+                using kernel_shape = std::vector<unsigned long>;
                 ~Conv2d();
-                Conv2d(std::string layer_name, unsigned in_channel, unsigned output_channel, unsigned kernel_size, unsigned padding, unsigned stride=1, std::string weight_init="gaussian", std::string bias_init="zeros", MType padding_init=0);
-                Conv2d(std::string layer_name, unsigned in_channel, unsigned output_channel, std::initializer_list<unsigned> kernel_size, std::initializer_list<unsigned> padding, unsigned stride=1, std::string weight_init="gaussian", std::string bias_init="zeros", MType padding_init=0);
-                Conv2d(std::string layer_name, unsigned in_channel, unsigned output_channel, kernel_shape kernel_size, kernel_shape padding, unsigned stride=1, std::string weight_init="gaussian", std::string bias_init="zeros", MType padding_init=0);
+                Conv2d(std::string layer_name, unsigned long in_channel, unsigned long output_channel, unsigned long kernel_size, unsigned long padding, unsigned long stride=1, std::string weight_init="gaussian", std::string bias_init="zeros", MType padding_init=0);
+                Conv2d(std::string layer_name, unsigned long in_channel, unsigned long output_channel, std::initializer_list<unsigned long> kernel_size, std::initializer_list<unsigned long> padding, unsigned long stride=1, std::string weight_init="gaussian", std::string bias_init="zeros", MType padding_init=0);
+                Conv2d(std::string layer_name, unsigned long in_channel, unsigned long output_channel, kernel_shape kernel_size, kernel_shape padding, unsigned long stride=1, std::string weight_init="gaussian", std::string bias_init="zeros", MType padding_init=0);
                 void construct(node_ptr_c input_node_c) override;
                 node_ptr_c operator()(std::initializer_list<node_ptr> input_node_c) override;
                 node_ptr_c operator()(node_ptr_c input_node_c) override;
                 void backward(node_ptr end) override;
                 void forward() override;
+                void update(MType lr) override;
                 Matrix<MType> get_output() override;
                 void clear_jacobi() override;
             protected:
@@ -43,20 +44,25 @@ namespace aedlf {
                 node_ptr padding_node;
                 node_ptr img2col_node;
                 node_ptr concat_node;
-                int output_h;
-                int output_w;
-                unsigned in_channel;
-                unsigned output_channel;
+                unsigned long output_h;
+                unsigned long output_w;
+                unsigned long in_channel;
+                unsigned long output_channel;
                 kernel_shape kernel_size;
                 kernel_shape padding_size;
-                unsigned stride;
+                unsigned long stride;
                 std::string weight_init;
                 std::string bias_init;
                 MType padding_init;
         };
 
         template <typename MType>
-        Conv2d<MType>::Conv2d(std::string layer_name, unsigned in_channel, unsigned output_channel, unsigned kernel_size, unsigned padding, unsigned stride, std::string weight_init, std::string bias_init, MType padding_init) {
+        Conv2d<MType>::~Conv2d() {
+
+        }
+
+        template <typename MType>
+        Conv2d<MType>::Conv2d(std::string layer_name, unsigned long in_channel, unsigned long output_channel, unsigned long kernel_size, unsigned long padding, unsigned long stride, std::string weight_init, std::string bias_init, MType padding_init) {
             this->in_channel = in_channel;
             this->output_channel = output_channel;
             this->kernel_size = kernel_shape {kernel_size, kernel_size};
@@ -69,7 +75,7 @@ namespace aedlf {
         }
 
         template <typename MType>
-        Conv2d<MType>::Conv2d(std::string layer_name, unsigned in_channel, unsigned output_channel, std::initializer_list<unsigned> kernel_size, std::initializer_list<unsigned> padding, unsigned stride, std::string weight_init, std::string bias_init, MType padding_init) {
+        Conv2d<MType>::Conv2d(std::string layer_name, unsigned long in_channel, unsigned long output_channel, std::initializer_list<unsigned long> kernel_size, std::initializer_list<unsigned long> padding, unsigned long stride, std::string weight_init, std::string bias_init, MType padding_init) {
             this->in_channel = in_channel;
             this->output_channel = output_channel;
             this->kernel_size = kernel_shape {kernel_size};
@@ -82,7 +88,7 @@ namespace aedlf {
         }
 
         template <typename MType>
-        Conv2d<MType>::Conv2d(std::string layer_name, unsigned in_channel, unsigned output_channel, kernel_shape kernel_size, kernel_shape padding, unsigned stride, std::string weight_init, std::string bias_init, MType padding_init) {
+        Conv2d<MType>::Conv2d(std::string layer_name, unsigned long in_channel, unsigned long output_channel, kernel_shape kernel_size, kernel_shape padding, unsigned long stride, std::string weight_init, std::string bias_init, MType padding_init) {
             this->in_channel = in_channel;
             this->output_channel = output_channel;
             this->kernel_size = kernel_size;
@@ -97,7 +103,7 @@ namespace aedlf {
 
         template <typename MType>
         void Conv2d<MType>::construct(node_ptr_c input_node_c) {
-            node_ptr input {input_node_c[0]};
+            node_ptr input {input_node_c->at(0)};
             matrix_dim c_dim {input->get_data_dim()};
             matrix_tools::MakeMatrix<MType> mm;
             output_h = int(std::max(std::floor((c_dim[2] + 2 * padding_size[0] - kernel_size[0] - 2) / stride + 1), 0.0));
@@ -107,20 +113,23 @@ namespace aedlf {
             c_dim[2] = c_dim[2] + 2 * padding_size[0];
             c_dim[3] = c_dim[3] + 2 * padding_size[1];
             padding_node = std::make_shared<graph::PaddingNode<MType>>(
-                graph::PaddingNode<MType> {BaseComponent<MType>::layer_name + "_PADDING", c_dim}
+                BaseComponent<MType>::layer_name + "_PADDING",
+                c_dim
             );
             // init img2col
             c_dim[2] = kernel_size[0] * kernel_size[1];
             c_dim[3] = output_h * output_w;
             img2col_node = std::make_shared<graph::Img2colNode<MType>>(
-                graph::Img2colNode<MType> {BaseComponent<MType>::layer_name + "_IMG2COL", c_dim}
+                BaseComponent<MType>::layer_name + "_IMG2COL",
+                c_dim
             );
             // init weight
             c_dim[1] = in_channel;
             c_dim[2] = output_channel;
             c_dim[3] = kernel_size[0] * kernel_size[1];
             weight_node = std::make_shared<graph::WeightNode<MType>>(
-                graph::WeightNode<MType> {BaseComponent<MType>::layer_name + "_WEIGHT", c_dim}
+                BaseComponent<MType>::layer_name + "_WEIGHT",
+                c_dim
             );
             weight_node->init_data(weight_init);
             // init bias
@@ -128,11 +137,13 @@ namespace aedlf {
             c_dim[2] = output_channel;
             c_dim[3] = output_h * output_w;
             bias_node = std::make_shared<graph::MulNode<MType>>(
-                graph::WeightNode<MType> {BaseComponent<MType>::layer_name + "_BIAS", c_dim}
+                BaseComponent<MType>::layer_name + "_BIAS",
+                c_dim
             );
             // init conv
             conv_node = std::make_shared<graph::Conv2dNode<MType>>(
-                graph::Conv2dNode<MType> {BaseComponent<MType>::layer_name + "_CORE", c_dim}
+                BaseComponent<MType>::layer_name + "_CORE",
+                c_dim
             );
             // connect graph
             padding_node->add_parent(input);
@@ -140,7 +151,7 @@ namespace aedlf {
             conv_node->add_parent(weight_node);
             conv_node->add_parent(img2col_node);
             conv_node->add_parent(bias_node);
-            BaseComponent<MType>::in_c->input_node_c;
+            BaseComponent<MType>::in_c = input_node_c;
             BaseComponent<MType>::out_c->push_back(conv_node);
             BaseComponent<MType>::complete_construct = true;
         }
@@ -150,22 +161,18 @@ namespace aedlf {
             if(!BaseComponent<MType>::complete_construct) {
                 construct(input_node_c);
             }
-            return node_ptr_c {conv_node};
+            return BaseComponent<MType>::out_c;
         }
 
         template <typename MType>
         typename Conv2d<MType>::node_ptr_c Conv2d<MType>::operator()(std::initializer_list<node_ptr> input_node_c) {
-            return operator()(node_ptr_c {input_node_c});
+            node_ptr_c arg_wrapper {std::make_shared<std::vector<node_ptr>>(input_node_c)};
+            return operator()(arg_wrapper);
         }
 
         template <typename MType>
         Matrix<MType> Conv2d<MType>::get_output() {
             return conv_node.get_data();
-        }
-
-        template <typename MType>
-        Conv2d<MType>::~Conv2d() {
-
         }
 
         template <typename MType>
@@ -179,7 +186,7 @@ namespace aedlf {
 
         template <typename MType>
         void Conv2d<MType>::backward(node_ptr end) {
-            BaseComponent<MType>::in_c[0]->backward(end);
+            BaseComponent<MType>::in_c->at(0)->backward(end);
             weight_node->backward(end);
             bias_node->backward(end);
         }
@@ -187,6 +194,12 @@ namespace aedlf {
         template <typename MType>
         void Conv2d<MType>::forward() {
             conv_node->forward();
+        }
+
+        template <typename MType>
+        void Conv2d<MType>::update(MType lr) {
+            weight_node->update(lr);
+            bias_node->update(lr);
         }
     }
 }

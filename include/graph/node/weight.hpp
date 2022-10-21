@@ -9,6 +9,7 @@ namespace aedlf {
             public:
                 using BaseNode<MType>::BaseNode;
                 void init_data(std::string init_method) override;
+                void update(MType lr) override;
         };
 
         template <typename MType>
@@ -24,6 +25,11 @@ namespace aedlf {
             auto func_map_iter = function_map.find(init_method);
             assert(func_map_iter != function_map.end());
             (mm.*function_map[init_method])(BaseNode<MType>::data);
+        }
+
+        template <typename MType>
+        void WeightNode<MType>::update(MType lr) {
+            BaseNode<MType>::data += BaseNode<MType>::jacobi * (-1.0 * lr);
         }
     }
 }

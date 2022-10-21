@@ -6,13 +6,13 @@
 namespace aedlf {
     namespace graph {
         template <typename MType>
-        class Conv2dNode : BaseNode<MType> {
+        class Conv2dNode : public BaseNode<MType> {
             // backward需要定制
             public:
                 using BaseNode<MType>::BaseNode;
-                using ul_pos = const std::pair<int, int>;
+                using ul_pos = const std::pair<unsigned long, unsigned long>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
-                using matrix_dim = std::vector<int>;
+                using matrix_dim = std::vector<unsigned long>;
                 void compute_forward() override;
                 void compute_jacobi(Matrix<MType>& m, node_ptr parent_node) override;
         };

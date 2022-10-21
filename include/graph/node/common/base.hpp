@@ -1,6 +1,7 @@
 #pragma once
 #include "../../../math/matrix.hpp"
 #include "../../../math/tools.hpp"
+#include <initializer_list>
 #include <stdexcept>
 #include <vector>
 #include <memory>
@@ -19,7 +20,7 @@ namespace aedlf {
                 using node_ptr = std::shared_ptr<BaseNode>;
                 using matrix_data_p = std::shared_ptr<std::vector<MType>>;
                 using matrix_p = std::shared_ptr<Matrix<MType>>;
-                using matrix_dim = std::vector<int>;
+                using matrix_dim = std::vector<unsigned long>;
                 BaseNode(std::string node_name, matrix_dim m_dim);
                 BaseNode(std::string node_name, const Matrix<MType>& m);
                 BaseNode(std::string node_name, matrix_data_p data, matrix_dim m_dim);
@@ -42,13 +43,21 @@ namespace aedlf {
                 virtual void add_children(node_ptr children);
                 virtual void set_data(const Matrix<MType>& m);
                 virtual void clear_jacobi();
+                virtual void update(MType lr) {};
                 virtual Matrix<MType> get_data();
                 virtual Matrix<MType> get_jacobi();
                 virtual matrix_p get_m_data();
                 virtual matrix_p get_m_jacobi();
                 virtual matrix_dim get_data_dim();
                 virtual matrix_dim get_jacobi_dim();
+                virtual void view_data(matrix_dim shape);
+                virtual void view_data(unsigned long n, unsigned long c, unsigned long h, unsigned long w);
+                virtual void view_data(std::initializer_list<unsigned long> shape);
+                virtual void view_jacobi(matrix_dim shape);
+                virtual void view_jacobi(unsigned long n, unsigned long c, unsigned long h, unsigned long w);
+                virtual void view_jacobi(std::initializer_list<unsigned long> shape);
                 virtual void init_data(std::string init_method) {};
+                bool is_jacobi_exists();
             protected:
                 graph_nodes parents {std::make_shared<std::vector<std::shared_ptr<BaseNode>>>()};
                 graph_nodes childrens {std::make_shared<std::vector<std::shared_ptr<BaseNode>>>()};
@@ -122,7 +131,7 @@ namespace aedlf {
         template <typename MType>
         typename BaseNode<MType>::node_ptr BaseNode<MType>::get_children(size_t children_id) {
             if(childrens == nullptr) {
-                return std::make_shared<BaseNode>(nullptr);
+                return nullptr;
             }
             return childrens->at(children_id);
         }
@@ -135,7 +144,7 @@ namespace aedlf {
         template <typename MType>
         typename BaseNode<MType>::node_ptr BaseNode<MType>::get_parent(size_t parent_id) {
             if(parents == nullptr) {
-                return std::make_shared<BaseNode>(nullptr);
+                return nullptr;
             }
             return parents->at(parent_id);
         }
@@ -205,7 +214,7 @@ namespace aedlf {
             }
             if(std::enable_shared_from_this<BaseNode<MType>>::shared_from_this() == output_node) {
                 matrix_dim jacobi_dim {BaseNode<MType>::data.get_dim()};
-                int jacobi_shape {jacobi_dim[2] * jacobi_dim[3]};
+                unsigned long jacobi_shape {jacobi_dim[2] * jacobi_dim[3]};
                 jacobi_dim[2] = jacobi_shape;
                 jacobi_dim[3] = jacobi_shape;
                 matrix_tools::MakeMatrix<MType> mm {jacobi_dim};
@@ -221,8 +230,17 @@ namespace aedlf {
                     childrens->at(children_i)->backward(output_node);
                 }
                 childrens->at(children_i)->compute_jacobi(temp, std::enable_shared_from_this<BaseNode<MType>>::shared_from_this());
-                jacobi += childrens->at(children_i)->jacobi * temp;
+                matrix_dim child_jacobi_dim {childrens->at(children_i)->jacobi.get_dim()};
+                matrix_dim temp_jacobi_dim {temp.get_dim()};
+                if(child_jacobi_dim[2] == temp_jacobi_dim[3]) {
+                    jacobi += childrens->at(children_i)->jacobi * temp;
+                }
+                else {
+                    jacobi += temp.mul_v(childrens->at(children_i)->jacobi);
+                }
+                
             }
+            jacobi.view(data.get_dim());
             wait_backward = false;
         }
 
@@ -274,6 +292,41 @@ namespace aedlf {
         template <typename MType>
         typename BaseNode<MType>::matrix_dim BaseNode<MType>::get_jacobi_dim() {
             return jacobi.get_dim();
+        }
+
+        template <typename MType>
+        bool BaseNode<MType>::is_jacobi_exists() {
+            return !jacobi.is_uninitialized();
+        }
+
+        template <typename MType>
+        void BaseNode<MType>::view_data(matrix_dim shape) {
+            data.view(shape);
+        }
+
+        template <typename MType>
+        void BaseNode<MType>::view_data(unsigned long n, unsigned long c, unsigned long h, unsigned long w) {
+            data.view(n, c, h, w);
+        }
+
+        template <typename MType>
+        void BaseNode<MType>::view_data(std::initializer_list<unsigned long> shape) {
+            data.view(shape);
+        }
+
+        template <typename MType>
+        void BaseNode<MType>::view_jacobi(matrix_dim shape) {
+            jacobi.view(shape);
+        }
+
+        template <typename MType>
+        void BaseNode<MType>::view_jacobi(unsigned long n, unsigned long c, unsigned long h, unsigned long w) {
+            jacobi.view(n, c, h, w);
+        }
+
+        template <typename MType>
+        void BaseNode<MType>::view_jacobi(std::initializer_list<unsigned long> shape) {
+            jacobi.view(shape);
         }
     }
 }

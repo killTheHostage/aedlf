@@ -7,23 +7,23 @@ namespace aedlf {
         template <typename MType>
         class Img2colNode : public BaseNode<MType> {
             public:
-                using ul_pos = const std::pair<int, int>;
+                using ul_pos = const std::pair<unsigned long, unsigned long>;
                 using node_ptr = std::shared_ptr<BaseNode<MType>>;
-                using matrix_dim = std::vector<int>;
+                using matrix_dim = std::vector<unsigned long>;
                 using matrix_data_p = std::shared_ptr<std::vector<MType>>;
                 using graph_nodes = std::shared_ptr<std::vector<std::shared_ptr<BaseNode<MType>>>>;
-                using kernel_shape = std::vector<unsigned>;
-                Img2colNode(std::string node_name, matrix_dim m_dim, kernel_shape kernel_size, int stride) : BaseNode<MType> {node_name, m_dim}, stride_(stride), kernel_size_(kernel_size) {};
-                Img2colNode(std::string node_name, const Matrix<MType>& m, kernel_shape kernel_size, int stride) : BaseNode<MType> {node_name, m}, stride_(stride), kernel_size_(kernel_size) {};
-                Img2colNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, kernel_shape kernel_size, int stride) : BaseNode<MType> {node_name, data, m_dim}, stride_(stride), kernel_size_(kernel_size) {};
-                Img2colNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, node_ptr parent, kernel_shape kernel_size, int stride) : BaseNode<MType> {node_name, data, m_dim, parent}, stride_(stride), kernel_size_(kernel_size) {};
-                Img2colNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, graph_nodes parents, kernel_shape kernel_size, int stride) : BaseNode<MType> {node_name, data, m_dim, parents}, stride_(stride), kernel_size_(kernel_size) {};
+                using kernel_shape = std::vector<unsigned long>;
+                Img2colNode(std::string node_name, matrix_dim m_dim, kernel_shape kernel_size, unsigned long stride) : BaseNode<MType> {node_name, m_dim}, stride_(stride), kernel_size_(kernel_size) {};
+                Img2colNode(std::string node_name, const Matrix<MType>& m, kernel_shape kernel_size, unsigned long stride) : BaseNode<MType> {node_name, m}, stride_(stride), kernel_size_(kernel_size) {};
+                Img2colNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, kernel_shape kernel_size, unsigned long stride) : BaseNode<MType> {node_name, data, m_dim}, stride_(stride), kernel_size_(kernel_size) {};
+                Img2colNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, node_ptr parent, kernel_shape kernel_size, unsigned long stride) : BaseNode<MType> {node_name, data, m_dim, parent}, stride_(stride), kernel_size_(kernel_size) {};
+                Img2colNode(std::string node_name, matrix_data_p data, matrix_dim m_dim, graph_nodes parents, kernel_shape kernel_size, unsigned long stride) : BaseNode<MType> {node_name, data, m_dim, parents}, stride_(stride), kernel_size_(kernel_size) {};
                 void compute_forward() override;
                 void compute_jacobi(Matrix<MType>& m, node_ptr parent_node) override;
                 void backward(node_ptr output_node) override;
             protected:
                 matrix_tools::MakeMatrix<MType> mm;
-                int stride_;
+                unsigned long stride_;
                 kernel_shape kernel_size_;
         };
 
